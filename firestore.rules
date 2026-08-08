@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pricing page reads plans directly; only server code (Admin SDK) can
+    // create/edit/delete them via the Super Admin panel.
+    match /plans/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A customer can read their own trial/plan status, never anyone else's.
+    // All writes (creating the record, updating status/plan) happen only
+    // through server API routes using the Admin SDK.
+    match /customers/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Trial length and other global settings — server-only, not even
+    // readable from the client.
+    match /portalSettings/{id} {
+      allow read, write: if false;
+    }
+  }
+}

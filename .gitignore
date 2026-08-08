@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+.vercel
+npm-debug.log*
+
+# Firebase service account keys — never commit these
+*-service-account.json
+*serviceAccount*.json
+*-adminsdk-*.json
+*privatekey*.json
+firebase-auth-export.json
