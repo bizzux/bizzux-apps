@@ -44,10 +44,15 @@ Modeled on Zoho's "Getting Started" wizard and Setup → Users → Add New User.
   asking for company name, employee count, time zone, and currency
   (`components/OnboardingModal.js` → `POST /api/onboarding`). They can also
   skip it.
-- **Team invites** — an account owner (or any teammate with the
-  Administrator profile) can invite others from `/team` (`+ New User`):
-  first name, last name, email, a free-text Role, and a Profile
-  (`Administrator` or `Standard`). This:
+- **Team invites** — an account owner (or any teammate with the Global Admin
+  or Admin profile) can invite others from `/team` (`+ New User`): first
+  name, last name, email, a free-text Role, and a Profile. Profile is the
+  actual permission tier (see `lib/roles.js`) — Global Admin, Admin,
+  Manager, Staff/Operator, or Viewer/Auditor; only Global Admin and Admin
+  can reach `/team` themselves. Note that today any of them can grant
+  *anyone else* the Global Admin profile too, including "Internal Bizzux
+  team only" access — there's no extra gate on that specific option yet.
+  Inviting someone:
   1. Creates a disabled-password Firebase Auth user for that email
      (`adminAuth().createUser`).
   2. Adds a row to `customers/{accountId}/team/{memberId}` with
@@ -67,24 +72,74 @@ Modeled on Zoho's "Getting Started" wizard and Setup → Users → Add New User.
     for now (a person can't yet belong to two accounts) — the admin sees a
     clear error explaining why.
 
+## Roles
+
+`lib/roles.js` is the single source of truth for the assignable profiles —
+both `/team`'s dropdown and every server-side permission check import from
+it, so they can't drift apart:
+
+| Profile | Scope | What they can do |
+|---|---|---|
+| Global Admin | Entire Bizzux platform | Internal Bizzux team only; manages organisations and permissions, subscriptions and platform configuration |
+| Admin | Entire organisation and all branches | Manages users, branches, modules and configuration; cannot transfer ownership or delete the organisation |
+| Manager | Assigned branches | Manages sales, POS, inventory, purchases, CRM, expenses, employees and operational reports |
+| Staff/Operator | Assigned function and location | Performs daily transactions without configuration or approval authority |
+| Viewer/Auditor | Selected organisation or branch | Read-only reports and records; no data modification |
+
+Two things sit outside that list on purpose:
+- **Super Admin** — `SUPER_ADMIN_EMAIL`, not a Firestore profile, never
+  shown in any dropdown, invisible everywhere. See "Super admin (hidden)"-style
+  handling in `lib/firebaseAdmin.js`.
+- **Account Owner** — whoever's `customers/{uid}` doc this is. Always has
+  full Admin-equivalent access on their own account, plus the one thing no
+  Admin has: the ability to transfer ownership or delete the account.
+  `resolveAccount()` reports Owner's `profile` as `"Admin"` for permission
+  checks, with `isOwner: true` as the separate flag for that extra power.
+
+`ACCOUNT_ADMIN_PROFILES` (`["Global Admin", "Admin"]`) gates `/team` access
+and account-level configuration; Manager/Staff-Operator/Viewer-Auditor can't
+reach either. Branch/location scoping ("assigned branches", "selected
+organisation or branch" in the table above) is descriptive only for
+now — there's no branches/locations data model or enforcement yet.
+
 ## Bizzux Shop single sign-on
 
 Bizzux Shop (`shop.bizzux.com`, repo `bizzux-shop`) is its own separate
 Firebase project, so being signed into this portal doesn't automatically
-sign you into Shop. Clicking the "Bizzux Shop" tile on `/dashboard` bridges
-that:
+sign you into Shop. Shop also has no login-account or role-management
+screen of its own anymore — this app is the single source of truth for
+every role, and Shop's roles are entirely derived from it. Clicking the
+"Bizzux Shop" tile on `/dashboard` bridges that:
 
 1. `GET /api/shop-sso` mints a short-lived (60s), HMAC-signed token
-   containing the caller's email and role (`Administrator` profile →
-   Shop `owner`, `Standard` → Shop `shopkeeper`).
+   containing the caller's email and role, mapped from their status here:
+
+   | Here (bizzux-apps) | Shop role |
+   |---|---|
+   | Super Admin (`SUPER_ADMIN_EMAIL`) | `super` |
+   | Account Owner (owns the account) | `owner` |
+   | Invited teammate, Profile = Global Admin or Admin | `owner` |
+   | Invited teammate, Profile = Manager | `manager` |
+   | Invited teammate, Profile = Viewer/Auditor | `viewer` |
+   | Invited teammate, Profile = Staff/Operator | `shopkeeper` |
+
+   Global Admin currently gets the same Shop access as Admin (full "Owner"
+   access to whichever shop they sign into), not Shop's own hidden Super
+   Admin tier — see the comment above `PROFILE_TO_SHOP_ROLE` in
+   `app/api/shop-sso/route.js` if that needs to change later.
+
 2. The tile opens `https://shop.bizzux.com/sso?token=...` in a new tab.
 3. Shop's `/api/sso` route verifies the signature (both apps share
    `SHOP_SSO_SECRET` — this app never touches Shop's Firebase project
    directly), finds-or-creates a matching Firebase Auth user in Shop's
-   project, adds them to `settings/app.ownerEmails` there if their role is
-   `owner`, and mints a Firebase custom token.
+   project, and files that email into whichever of Shop's
+   `settings/app.{superEmails,ownerEmails,managerEmails,viewerEmails}`
+   matches the role (removing it from the others, so a role change here —
+   e.g. demoting an Admin to Staff/Operator — takes effect in Shop the next
+   time they sign in through the tile), then mints a Firebase custom token.
 4. Shop's `/sso` page signs in with that custom token and lands on
-   `/admin` — no separate login step.
+   `/admin` with the right role already applied — no separate login step,
+   and nothing to configure inside Shop itself.
 
 **Setup:** generate one random secret and set it as `SHOP_SSO_SECRET` in
 both this project's and `bizzux-shop`'s environment (`.env.local` and

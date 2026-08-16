@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser, adminDb, adminAuth } from "@/lib/firebaseAdmin";
+import { DEFAULT_PROFILE } from "@/lib/roles";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -43,7 +44,7 @@ export async function POST(req) {
       .doc("memberships/" + c.uid)
       .set({
         accountId: inv.accountId,
-        profile: inv.profile || "Standard",
+        profile: inv.profile || DEFAULT_PROFILE,
         role: inv.role || "",
         email: c.email,
         joinedAt: FieldValue.serverTimestamp(),

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAccountAdmin, adminAuth, adminDb, sendAuthEmail } from "@/lib/firebaseAdmin";
+import { PROFILE_VALUES, DEFAULT_PROFILE } from "@/lib/roles";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const PROFILES = ["Administrator", "Standard"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -44,7 +44,7 @@ async function sendInvite({ accountId, teamMemberId, email, firstName, lastName,
 }
 
 // Lists everyone on the caller's account: the owner plus every invited /
-// active teammate. Administrator profile only.
+// active teammate. Global Admin / Admin profiles only.
 export async function GET(req) {
   try {
     const acct = await requireAccountAdmin(req);
@@ -59,7 +59,7 @@ export async function GET(req) {
         lastName: "",
         email: owner.email || "",
         role: "Owner",
-        profile: "Administrator",
+        profile: "Admin",
         status: "active",
         isOwner: true,
         joinedAt: toIso(owner.createdAt),
@@ -72,7 +72,7 @@ export async function GET(req) {
           lastName: t.lastName || "",
           email: t.email || "",
           role: t.role || "",
-          profile: t.profile || "Standard",
+          profile: t.profile || DEFAULT_PROFILE,
           status: t.status || "invited",
           isOwner: false,
           joinedAt: toIso(t.joinedAt),
@@ -99,7 +99,7 @@ export async function POST(req) {
       const lastName = String(body.lastName || "").trim().slice(0, 60);
       const email = String(body.email || "").trim().toLowerCase().slice(0, 200);
       const role = String(body.role || "").trim().slice(0, 60);
-      const profile = PROFILES.includes(body.profile) ? body.profile : "Standard";
+      const profile = PROFILE_VALUES.includes(body.profile) ? body.profile : DEFAULT_PROFILE;
 
       if (!firstName) throw { status: 400, message: "First name is required" };
       if (!EMAIL_RE.test(email)) throw { status: 400, message: "Enter a valid email address" };

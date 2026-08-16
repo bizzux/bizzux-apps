@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { PROFILES, DEFAULT_PROFILE } from "@/lib/roles";
 import Link from "next/link";
 
-const PROFILES = ["Administrator", "Standard"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function api(path, method, body) {
@@ -177,7 +177,7 @@ function AddUserModal({ onClose, onAdded }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [profile, setProfile] = useState("Standard");
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -230,9 +230,12 @@ function AddUserModal({ onClose, onAdded }) {
             <label className="label">Profile</label>
             <select className="input" value={profile} onChange={(e) => setProfile(e.target.value)}>
               {PROFILES.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p.value} value={p.value}>{p.label} — {p.scope}</option>
               ))}
             </select>
+            <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 0 }}>
+              {PROFILES.find((p) => p.value === profile)?.desc}
+            </p>
           </div>
           <div className="row" style={{ justifyContent: "flex-end" }}>
             <button type="button" className="btn-outline-dark" onClick={onClose}>Cancel</button>
