@@ -176,7 +176,6 @@ function AddUserModal({ onClose, onAdded }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -194,7 +193,10 @@ function AddUserModal({ onClose, onAdded }) {
     }
     setBusy(true);
     try {
-      await api("/api/team", "POST", { action: "invite", firstName, lastName, email, role, profile });
+      // `role` (free-text job title) is no longer collected here — the API
+      // still accepts it and defaults it to "" server-side, so nothing else
+      // needs to change for this field to just go away.
+      await api("/api/team", "POST", { action: "invite", firstName, lastName, email, profile });
       onAdded();
     } catch (e2) {
       setError(e2.message);
@@ -208,27 +210,23 @@ function AddUserModal({ onClose, onAdded }) {
         <h2 style={{ marginBottom: 18 }}>Add New User</h2>
         <form onSubmit={submit} noValidate>
           <div style={{ marginBottom: 12 }}>
-            <label className="label">First name</label>
-            <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoFocus />
+            <label className="label">First name *</label>
+            <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoFocus required />
           </div>
           <div style={{ marginBottom: 12 }}>
             <label className="label">Last name</label>
             <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </div>
           <div style={{ marginBottom: 4 }}>
-            <label className="label">Email</label>
-            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label className="label">Email *</label>
+            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <p className="muted" style={{ fontSize: 12, marginBottom: 12 }}>
             An invitation will be sent to this email address.
           </p>
-          <div style={{ marginBottom: 12 }}>
-            <label className="label">Role</label>
-            <input className="input" value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Manager, Cashier" />
-          </div>
           <div style={{ marginBottom: 20 }}>
-            <label className="label">Profile</label>
-            <select className="input" value={profile} onChange={(e) => setProfile(e.target.value)}>
+            <label className="label">Roles *</label>
+            <select className="input" value={profile} onChange={(e) => setProfile(e.target.value)} required>
               {PROFILES.map((p) => (
                 <option key={p.value} value={p.value}>{p.label} — {p.scope}</option>
               ))}
