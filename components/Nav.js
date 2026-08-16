@@ -7,7 +7,7 @@ export default function Nav() {
   return (
     <nav className="nav">
       <div className="nav-inner">
-        <Link href="/" className="logo-text">bizzux<span className="dot">.</span></Link>
+        <Link href="/"><img src="/logo.png" alt="Bizzux" className="logo-img" /></Link>
         <div className="nav-links">
           <Link href="/apps">All apps</Link>
           <Link href="/pricing">Pricing</Link>

@@ -65,6 +65,15 @@ Modeled on Zoho's "Getting Started" wizard and Setup → Users → Add New User.
      records which account they belong to and with what profile.
   - No new env vars or Firebase console setup are required beyond what's
     already listed above (Email/Password sign-in already covers this).
+  - `/accept-invite` handles both ways someone can land there: with
+    `mode=resetPassword&oobCode=...` still attached (if the Firebase project's
+    email "Action URL" is set to point straight at this page), or with only
+    `?invite=...` left (the default — Firebase's own hosted reset-password
+    page consumes the oobCode first, and its "Continue" link drops those
+    params). In the second case the person already set their password on
+    Firebase's page, so the app looks their email up via
+    `GET /api/team/accept?invite=...` and shows a plain sign-in form instead
+    of treating the link as invalid.
   - The invite email uses Firebase's default "Reset password" template —
     for nicer branding, customize it under Authentication → Templates →
     Password reset in the Firebase console.

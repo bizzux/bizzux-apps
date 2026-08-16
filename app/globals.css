@@ -93,6 +93,7 @@ h1, h2, h3, p { margin: 0; }
   background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .logo-text .dot { color: var(--lime); }
+.logo-img { height: 28px; width: auto; display: inline-block; vertical-align: middle; }
 .nav-links { display: flex; align-items: center; gap: 28px; }
 .nav-links a { color: rgba(255,255,255,0.75); font-weight: 600; font-size: 14.5px; }
 .nav-links a:hover { color: #fff; }

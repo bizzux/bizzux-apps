@@ -60,7 +60,7 @@ export default function AdminPage() {
   return (
     <div>
       <div className="dash-topbar">
-        <Link href="/" className="logo-text">bizzux<span className="dot">.</span></Link>
+        <Link href="/"><img src="/logo.png" alt="Bizzux" className="logo-img" /></Link>
         <div className="right">
           <Link href="/dashboard" className="signout-link">Dashboard</Link>
           <button className="signout-link" onClick={() => signOut(auth)}>Sign out</button>

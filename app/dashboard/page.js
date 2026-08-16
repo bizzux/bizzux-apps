@@ -182,7 +182,7 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="dash-topbar">
-        <Link href="/" className="logo-text">bizzux<span className="dot">.</span></Link>
+        <Link href="/"><img src="/logo.png" alt="Bizzux" className="logo-img" /></Link>
         <div className="right">
           {isSuper && (
             <Link href="/admin" className="signout-link">👑 Admin</Link>

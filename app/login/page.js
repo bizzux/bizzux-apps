@@ -137,8 +137,8 @@ export default function LoginPage() {
       <Nav />
       <div className="login-wrap">
       <div className="login-card">
-        <Link href="/" className="logo-text" style={{ display: "block", marginBottom: 22 }}>
-          bizzux<span className="dot">.</span>
+        <Link href="/" style={{ display: "block", marginBottom: 22 }}>
+          <img src="/logo.png" alt="Bizzux" className="logo-img" style={{ height: 32 }} />
         </Link>
 
         <button type="button" className="btn-google" onClick={handleGoogleSignIn} disabled={googleBusy || busy}>
