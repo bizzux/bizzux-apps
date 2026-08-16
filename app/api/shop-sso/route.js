@@ -25,7 +25,7 @@ const SHOP_URL = process.env.SHOP_URL || "https://shop.bizzux.com";
 //   - Global Admin / Admin                            -> Shop "owner"
 //   - Manager                                         -> Shop "manager"
 //   - Viewer/Auditor                                  -> Shop "viewer"
-//   - Staff/Operator (or anything unrecognized)        -> Shop "shopkeeper"
+//   - Staff/Shopkeeper (or anything unrecognized)        -> Shop "shopkeeper"
 // Global Admin currently gets the same Shop access as Admin (full, visible
 // "Owner" access to whichever shop they sign into) rather than Shop's
 // hidden Super Admin tier — it's not automatic platform-wide Shop access,
@@ -39,7 +39,7 @@ const PROFILE_TO_SHOP_ROLE = {
   Admin: "owner",
   Manager: "manager",
   "Viewer/Auditor": "viewer",
-  "Staff/Operator": "shopkeeper",
+  "Staff/Shopkeeper": "shopkeeper",
 };
 
 export async function GET(req) {

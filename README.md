@@ -48,7 +48,7 @@ Modeled on Zoho's "Getting Started" wizard and Setup → Users → Add New User.
   or Admin profile) can invite others from `/team` (`+ New User`): first
   name, last name, email, a free-text Role, and a Profile. Profile is the
   actual permission tier (see `lib/roles.js`) — Global Admin, Admin,
-  Manager, Staff/Operator, or Viewer/Auditor; only Global Admin and Admin
+  Manager, Staff/Shopkeeper, or Viewer/Auditor; only Global Admin and Admin
   can reach `/team` themselves. Note that today any of them can grant
   *anyone else* the Global Admin profile too, including "Internal Bizzux
   team only" access — there's no extra gate on that specific option yet.
@@ -83,7 +83,7 @@ it, so they can't drift apart:
 | Global Admin | Entire Bizzux platform | Internal Bizzux team only; manages organisations and permissions, subscriptions and platform configuration |
 | Admin | Entire organisation and all branches | Manages users, branches, modules and configuration; cannot transfer ownership or delete the organisation |
 | Manager | Assigned branches | Manages sales, POS, inventory, purchases, CRM, expenses, employees and operational reports |
-| Staff/Operator | Assigned function and location | Performs daily transactions without configuration or approval authority |
+| Staff/Shopkeeper | Assigned function and location | Performs daily transactions without configuration or approval authority |
 | Viewer/Auditor | Selected organisation or branch | Read-only reports and records; no data modification |
 
 Two things sit outside that list on purpose:
@@ -97,7 +97,7 @@ Two things sit outside that list on purpose:
   checks, with `isOwner: true` as the separate flag for that extra power.
 
 `ACCOUNT_ADMIN_PROFILES` (`["Global Admin", "Admin"]`) gates `/team` access
-and account-level configuration; Manager/Staff-Operator/Viewer-Auditor can't
+and account-level configuration; Manager/Staff-Shopkeeper/Viewer-Auditor can't
 reach either. Branch/location scoping ("assigned branches", "selected
 organisation or branch" in the table above) is descriptive only for
 now — there's no branches/locations data model or enforcement yet.
@@ -121,7 +121,7 @@ every role, and Shop's roles are entirely derived from it. Clicking the
    | Invited teammate, Profile = Global Admin or Admin | `owner` |
    | Invited teammate, Profile = Manager | `manager` |
    | Invited teammate, Profile = Viewer/Auditor | `viewer` |
-   | Invited teammate, Profile = Staff/Operator | `shopkeeper` |
+   | Invited teammate, Profile = Staff/Shopkeeper | `shopkeeper` |
 
    Global Admin currently gets the same Shop access as Admin (full "Owner"
    access to whichever shop they sign into), not Shop's own hidden Super
@@ -135,7 +135,7 @@ every role, and Shop's roles are entirely derived from it. Clicking the
    project, and files that email into whichever of Shop's
    `settings/app.{superEmails,ownerEmails,managerEmails,viewerEmails}`
    matches the role (removing it from the others, so a role change here —
-   e.g. demoting an Admin to Staff/Operator — takes effect in Shop the next
+   e.g. demoting an Admin to Staff/Shopkeeper — takes effect in Shop the next
    time they sign in through the tile), then mints a Firebase custom token.
 4. Shop's `/sso` page signs in with that custom token and lands on
    `/admin` with the right role already applied — no separate login step,
