@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { PROFILES, DEFAULT_PROFILE } from "@/lib/roles";
+import { PROFILES } from "@/lib/roles";
 import Link from "next/link";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -176,7 +176,7 @@ function AddUserModal({ onClose, onAdded }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -189,6 +189,10 @@ function AddUserModal({ onClose, onAdded }) {
     }
     if (!EMAIL_RE.test(email.trim())) {
       setError("Enter a valid email address");
+      return;
+    }
+    if (!profile) {
+      setError("Select a role");
       return;
     }
     setBusy(true);
@@ -227,8 +231,9 @@ function AddUserModal({ onClose, onAdded }) {
           <div style={{ marginBottom: 20 }}>
             <label className="label">Roles *</label>
             <select className="input" value={profile} onChange={(e) => setProfile(e.target.value)} required>
+              <option value="" disabled>Select role</option>
               {PROFILES.map((p) => (
-                <option key={p.value} value={p.value}>{p.label} — {p.scope}</option>
+                <option key={p.value} value={p.value}>{p.label}</option>
               ))}
             </select>
             <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 0 }}>
