@@ -6,6 +6,7 @@ import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -50,17 +51,7 @@ export default function PricingPage() {
 
   return (
     <>
-      <nav className="nav">
-        <div className="nav-inner">
-          <Link href="/" className="logo-text">bizzux<span className="dot">.</span></Link>
-          <div className="nav-links">
-            <Link href="/login">Sign in</Link>
-            <Link href="/login?mode=signup" className="btn-primary" style={{ padding: "9px 20px", fontSize: 13.5 }}>
-              Start free trial
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <div style={{ background: "var(--navy)", padding: "56px 24px 40px", textAlign: "center", color: "#fff" }}>
         <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 10 }}>Simple, transparent pricing</h1>
@@ -70,7 +61,7 @@ export default function PricingPage() {
       <section className="section">
         {plans === null && <p className="muted" style={{ textAlign: "center" }}>Loading plans…</p>}
         {plans && plans.length === 0 && (
-          <p className="muted" style={{ textAlign: "center" }}>Pricing is being finalized — check back soon.</p>
+          <p className="muted" style={{ textAlign: "center" }}>We're putting the finishing touches on pricing. Check back soon!</p>
         )}
         {plans && plans.length > 0 && (
           <div className="pricing-grid">

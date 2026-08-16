@@ -38,6 +38,7 @@ export async function POST(req) {
       status: "trial",
       planId: null,
       planName: null,
+      onboarded: false,
     });
 
     return NextResponse.json({ ok: true, created: true });

@@ -1,21 +1,10 @@
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function LandingPage() {
   return (
     <>
-      <nav className="nav">
-        <div className="nav-inner">
-          <span className="logo-text">bizzux<span className="dot">.</span></span>
-          <div className="nav-links">
-            <Link href="/apps">All apps</Link>
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/login">Sign in</Link>
-            <Link href="/login?mode=signup" className="btn-primary" style={{ padding: "9px 20px", fontSize: 13.5 }}>
-              Start free trial
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <header className="hero">
         <h1>
@@ -23,7 +12,7 @@ export default function LandingPage() {
         </h1>
         <p>
           One free account gets you started. Try any Bizzux app free, then keep
-          the ones that work for you — no extra logins, no hassle.
+          the ones that work for you, no extra logins, no hassle.
         </p>
         <div className="hero-ctas">
           <Link href="/login?mode=signup" className="btn-primary">Start free trial</Link>
@@ -93,7 +82,7 @@ export default function LandingPage() {
           <div className="feature-card">
             <div className="feature-icon">✓</div>
             <h3>One sign-in</h3>
-            <p>Sign up once with Google or email — use it across every Bizzux app.</p>
+            <p>Sign up once with Google or email, then use it across every Bizzux app.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">$</div>

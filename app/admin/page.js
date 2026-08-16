@@ -9,6 +9,7 @@ import Link from "next/link";
 const TABS = [
   { id: "trial", label: "Trial settings" },
   { id: "plans", label: "Plans" },
+  { id: "planlimits", label: "Plan Limits" },
   { id: "customers", label: "Customers" },
 ];
 
@@ -80,6 +81,7 @@ export default function AdminPage() {
 
         {tab === "trial" && <TrialSettings />}
         {tab === "plans" && <PlansManager />}
+        {tab === "planlimits" && <PlanLimitsManager />}
         {tab === "customers" && <CustomersList />}
       </div>
     </div>
@@ -265,7 +267,7 @@ function PlansManager() {
         {plans.map((p) => (
           <div key={p.id} style={{ borderBottom: "1px solid var(--line)", padding: "12px 0" }}>
             <div className="row" style={{ justifyContent: "space-between" }}>
-              <strong>{p.name} — ₹{p.price}/{p.billingPeriod}</strong>
+              <strong>{p.name} (₹{p.price}/{p.billingPeriod})</strong>
               {p.active === false && <span className="muted" style={{ fontSize: 12 }}>hidden</span>}
             </div>
             <div className="row" style={{ marginTop: 6 }}>
@@ -274,6 +276,180 @@ function PlansManager() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Default plan blueprints used by the one-click "Add default plans" seeder
+// below — a starting point, not fixed values. Everything here (price,
+// features, limits) can be edited afterward from the Plans / Plan Limits
+// tabs like any other plan.
+const DEFAULT_PLANS = [
+  {
+    name: "Essential", price: 499, billingPeriod: "month", sortOrder: 1,
+    description: "Everything you need to run one counter.",
+    features: ["1 shop location", "Up to 2 staff logins", "Digital menu & self-order", "Basic sales reports"],
+    popular: false, active: true,
+    limits: { maxStaffLogins: 2, maxShops: 1, maxMenuItems: 50, maxMonthlyOrders: 500, supportLevel: "Email" },
+  },
+  {
+    name: "Business", price: 999, billingPeriod: "month", sortOrder: 2,
+    description: "For growing shops with more staff and locations.",
+    features: ["Up to 3 shop locations", "Up to 8 staff logins", "Inventory & purchases", "Priority email support"],
+    popular: true, active: true,
+    limits: { maxStaffLogins: 8, maxShops: 3, maxMenuItems: 300, maxMonthlyOrders: 3000, supportLevel: "Priority Email" },
+  },
+  {
+    name: "Premium", price: 1999, billingPeriod: "month", sortOrder: 3,
+    description: "Unlimited scale with every feature unlocked.",
+    features: ["Unlimited shop locations", "Unlimited staff logins", "Full CapEx/OpEx & analytics", "Phone & priority support"],
+    popular: false, active: true,
+    limits: { maxStaffLogins: "", maxShops: "", maxMenuItems: "", maxMonthlyOrders: "", supportLevel: "Phone & Priority" },
+  },
+];
+
+const LIMIT_FIELDS = [
+  { key: "maxStaffLogins", label: "Staff logins" },
+  { key: "maxShops", label: "Shop locations" },
+  { key: "maxMenuItems", label: "Menu items" },
+  { key: "maxMonthlyOrders", label: "Orders / month" },
+];
+
+const SUPPORT_LEVELS = ["Email", "Priority Email", "Phone & Priority"];
+
+function PlanLimitsManager() {
+  const [plans, setPlans] = useState(null);
+  const [edits, setEdits] = useState({}); // planId -> { ...limit fields }
+  const [savingId, setSavingId] = useState(null);
+  const [seeding, setSeeding] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function load() {
+    try {
+      const d = await api("/api/admin/plans", "GET");
+      const list = d.plans || [];
+      setPlans(list);
+      const next = {};
+      for (const p of list) {
+        const l = p.limits || {};
+        next[p.id] = {
+          maxStaffLogins: l.maxStaffLogins ?? "", maxShops: l.maxShops ?? "",
+          maxMenuItems: l.maxMenuItems ?? "", maxMonthlyOrders: l.maxMonthlyOrders ?? "",
+          supportLevel: l.supportLevel || SUPPORT_LEVELS[0],
+        };
+      }
+      setEdits(next);
+    } catch {
+      setPlans([]);
+    }
+  }
+  useEffect(() => { load(); }, []);
+
+  function setField(planId, field, value) {
+    setEdits((e) => ({ ...e, [planId]: { ...e[planId], [field]: value } }));
+  }
+
+  async function saveLimits(planId) {
+    setSavingId(planId);
+    setErr("");
+    try {
+      const f = edits[planId];
+      const limits = {
+        maxStaffLogins: f.maxStaffLogins === "" ? "" : Number(f.maxStaffLogins),
+        maxShops: f.maxShops === "" ? "" : Number(f.maxShops),
+        maxMenuItems: f.maxMenuItems === "" ? "" : Number(f.maxMenuItems),
+        maxMonthlyOrders: f.maxMonthlyOrders === "" ? "" : Number(f.maxMonthlyOrders),
+        supportLevel: f.supportLevel,
+      };
+      await api("/api/admin/plans", "POST", { action: "setLimits", id: planId, limits });
+      await load();
+    } catch (e2) {
+      setErr(e2.message);
+    }
+    setSavingId(null);
+  }
+
+  async function seedDefaults() {
+    setSeeding(true);
+    setErr("");
+    try {
+      const existingNames = new Set((plans || []).map((p) => (p.name || "").trim().toLowerCase()));
+      for (const dp of DEFAULT_PLANS) {
+        if (existingNames.has(dp.name.toLowerCase())) continue; // don't duplicate one that's already there
+        await api("/api/admin/plans", "POST", { action: "create", ...dp });
+      }
+      await load();
+    } catch (e2) {
+      setErr(e2.message);
+    }
+    setSeeding(false);
+  }
+
+  if (plans === null) return <p className="muted">Loading…</p>;
+
+  const missingDefaults = DEFAULT_PLANS.filter(
+    (dp) => !plans.some((p) => (p.name || "").trim().toLowerCase() === dp.name.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <p className="section-title" style={{ marginTop: 0 }}>Plan tiers</p>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Set usage limits per plan — staff logins, shop locations, menu items, and monthly self-orders.
+          Leave a field blank for <b>Unlimited</b>. These numbers are for reference and billing conversations
+          for now; they aren&apos;t automatically enforced inside Bizzux Shop yet.
+        </p>
+        {missingDefaults.length > 0 && (
+          <button className="btn-primary" disabled={seeding} onClick={seedDefaults}>
+            {seeding ? "Adding…" : `+ Add default plans (${missingDefaults.map((d) => d.name).join(", ")})`}
+          </button>
+        )}
+        {err && <p className="error" style={{ marginTop: 10 }}>{err}</p>}
+      </div>
+
+      {plans.length === 0 && <p className="muted">No plans yet — add one from the Plans tab, or use the button above.</p>}
+
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+        {plans.map((p) => {
+          const f = edits[p.id] || {};
+          return (
+            <div key={p.id} className="card">
+              <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+                <strong>{p.name}</strong>
+                {p.popular && <span className="muted" style={{ fontSize: 12 }}>★ Popular</span>}
+              </div>
+
+              {LIMIT_FIELDS.map((lf) => (
+                <div key={lf.key} style={{ marginBottom: 10 }}>
+                  <label className="label">{lf.label}</label>
+                  <input
+                    className="input" type="number" min="0"
+                    placeholder="Unlimited"
+                    value={f[lf.key] ?? ""}
+                    onChange={(e) => setField(p.id, lf.key, e.target.value)}
+                  />
+                </div>
+              ))}
+
+              <div style={{ marginBottom: 12 }}>
+                <label className="label">Support level</label>
+                <select
+                  className="input"
+                  value={f.supportLevel || SUPPORT_LEVELS[0]}
+                  onChange={(e) => setField(p.id, "supportLevel", e.target.value)}
+                >
+                  {SUPPORT_LEVELS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              <button className="btn-primary" disabled={savingId === p.id} onClick={() => saveLimits(p.id)}>
+                {savingId === p.id ? "Saving…" : "Save limits"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

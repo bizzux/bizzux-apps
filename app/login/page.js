@@ -7,9 +7,11 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  sendEmailVerification,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,7 +51,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, new GoogleAuthProvider());
       await afterAuth();
     } catch (err) {
-      setError("Google sign-in failed. Please try again.");
+      setError("That didn't go through. Mind giving it another try?");
       setGoogleBusy(false);
     }
   }
@@ -108,6 +110,11 @@ export default function LoginPage() {
     try {
       if (mode === "signup") {
         await createUserWithEmailAndPassword(auth, email, password);
+        try {
+          await sendEmailVerification(auth.currentUser, { url: window.location.origin + "/dashboard" });
+        } catch {
+          // Non-fatal — account creation already succeeded either way.
+        }
         await afterAuth({ fullName: fullName.trim(), phone: phone.trim() });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -115,18 +122,20 @@ export default function LoginPage() {
       }
     } catch (err) {
       if (mode === "signup" && err?.code === "auth/email-already-in-use") {
-        setError("An account with this email already exists — try signing in instead.");
+        setError("Looks like you already have an account with this email. Try signing in instead.");
       } else if (mode === "signup" && err?.code === "auth/weak-password") {
         setError("Password must be at least 8 characters.");
       } else {
-        setError(mode === "signup" ? "Couldn't create account. Please try again." : "Sign in failed. Check your email and password.");
+        setError(mode === "signup" ? "We couldn't create your account. Please give it another try." : "That didn't work. Double check your email and password and try again.");
       }
       setBusy(false);
     }
   }
 
   return (
-    <div className="login-wrap">
+    <>
+      <Nav />
+      <div className="login-wrap">
       <div className="login-card">
         <Link href="/" className="logo-text" style={{ display: "block", marginBottom: 22 }}>
           bizzux<span className="dot">.</span>
@@ -229,6 +238,7 @@ export default function LoginPage() {
           {error && <p className="error">{error}</p>}
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

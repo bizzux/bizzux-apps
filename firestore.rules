@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isMember(accountId) {
+      return exists(/databases/$(database)/documents/memberships/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/memberships/$(request.auth.uid)).data.accountId == accountId;
+    }
+
     // Pricing page reads plans directly; only server code (Admin SDK) can
     // create/edit/delete them via the Super Admin panel.
     match /plans/{id} {
@@ -8,12 +13,35 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // A customer can read their own trial/plan status, never anyone else's.
-    // All writes (creating the record, updating status/plan) happen only
+    // A customer (account owner) can read their own trial/plan status, and
+    // so can any teammate they've invited into that account. All writes
+    // (creating the record, updating status/plan, onboarding) happen only
     // through server API routes using the Admin SDK.
     match /customers/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isMember(uid));
+      allow write: if false;
+
+      // Team roster for this account. The owner reads the whole roster
+      // through the /api/team route (Admin SDK, bypasses these rules); a
+      // teammate can read their own row directly. Writes always go through
+      // the server (invite / accept / remove).
+      match /team/{memberId} {
+        allow read: if request.auth != null && (request.auth.uid == uid || resource.data.uid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+
+    // Reverse lookup: which account (and profile/role) a teammate belongs
+    // to. Created server-side when an invite is accepted.
+    match /memberships/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
+    }
+
+    // Pending team invites, keyed by a random token. Only ever looked up
+    // by the server (Admin SDK) when an invite link is accepted.
+    match /invites/{id} {
+      allow read, write: if false;
     }
 
     // Trial length and other global settings — server-only, not even
