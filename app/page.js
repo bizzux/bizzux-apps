@@ -24,7 +24,7 @@ export default function LandingPage() {
         <div className="apps-panel">
           <div className="apps-panel-header">
             <span className="apps-panel-label">Featured apps</span>
-            <Link href="/apps" className="apps-panel-link">Explore all apps →</Link>
+            <Link href="/apps" className="btn-primary-sm">Explore all apps →</Link>
           </div>
           <div className="apps-panel-grid">
             <div className="apps-panel-item">

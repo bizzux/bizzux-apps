@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
-import { requireSuperAdmin, adminDb } from "@/lib/firebaseAdmin";
+import { requireSuperAdmin, requireOrgManager, adminDb } from "@/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Read is available to anyone who can manage organizations (Super Admin,
+// Global Admin, Admin) since the Add Organization form needs this list for
+// its "Profile (plan)" dropdown. Writing/managing plans themselves — price,
+// features, limits — stays Super Admin only below.
 export async function GET(req) {
   try {
-    await requireSuperAdmin(req);
+    await requireOrgManager(req);
     const snap = await adminDb().collection("plans").orderBy("sortOrder", "asc").get();
     const plans = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return NextResponse.json({ plans });

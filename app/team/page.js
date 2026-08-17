@@ -76,7 +76,7 @@ export default function TeamPage() {
     return (
       <div className="admin-shell">
         <p>You don&apos;t have access to this page.</p>
-        <Link href="/dashboard" style={{ color: "var(--blue)", fontWeight: 700 }}>Back to dashboard</Link>
+        <Link href="/dashboard" className="btn-primary-sm">Back to dashboard</Link>
       </div>
     );
   }
@@ -107,6 +107,7 @@ export default function TeamPage() {
         <Link href="/"><img src="/logo.png" alt="Bizzux" className="logo-img" /></Link>
         <div className="right">
           <Link href="/dashboard" className="signout-link">Dashboard</Link>
+          <Link href="/profile" className="signout-link">👤 Profile</Link>
           <button className="signout-link" onClick={() => signOut(auth)}>Sign out</button>
         </div>
       </div>

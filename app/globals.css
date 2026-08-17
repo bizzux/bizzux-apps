@@ -48,6 +48,19 @@ h1, h2, h3, p { margin: 0; }
 .btn-primary:hover { filter: brightness(1.06); }
 .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* Small brand-gradient button for inline text CTAs (e.g. "Back to
+   dashboard", "Explore all apps") — same gradient as .btn-primary, just
+   compact enough to sit inline with body copy instead of standing alone. */
+.btn-primary-sm {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--brand-gradient);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-weight: 700; font-size: 13px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+  text-decoration: none;
+}
+.btn-primary-sm:hover { filter: brightness(1.06); }
+
 .btn-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.35);
@@ -84,7 +97,7 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Navbar ---------- */
 .nav {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(8px);
+  background: var(--navy);
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1160px; margin: 0 auto; }
@@ -95,8 +108,8 @@ h1, h2, h3, p { margin: 0; }
 .logo-text .dot { color: var(--lime); }
 .logo-img { height: 28px; width: auto; display: inline-block; vertical-align: middle; }
 .nav-links { display: flex; align-items: center; gap: 28px; }
-.nav-links a { color: rgba(255,255,255,0.75); font-weight: 600; font-size: 14.5px; }
-.nav-links a:hover { color: #fff; }
+.nav-links a { color: #fff; font-weight: 600; font-size: 14.5px; transition: color 0.15s ease; }
+.nav-links a:hover { color: var(--teal-light); }
 
 /* ---------- Hero / landing ---------- */
 .hero {
@@ -236,17 +249,33 @@ h1, h2, h3, p { margin: 0; }
 }
 .dash-topbar .right { display: flex; align-items: center; gap: 16px; }
 .signout-link {
-  color: rgba(255,255,255,0.7); font-size: 13.5px; font-weight: 600;
-  background: none; border: none; padding: 0; margin: 0;
-  font-family: inherit; cursor: pointer; line-height: normal;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #fff; font-size: 13px; font-weight: 700;
+  background: transparent; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 8px;
+  padding: 6px 14px; margin: 0;
+  font-family: inherit; cursor: pointer; line-height: normal; text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.signout-link:hover { color: #fff; }
+.signout-link:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.55); }
 
 .trial-banner {
-  background: #fff7ed; border-bottom: 1px solid #fed7aa; color: #9a3412;
-  padding: 10px 24px; font-size: 13.5px; font-weight: 600; text-align: center;
+  background: #fff7ed; border-bottom: 1px solid #fed7aa; color: #ea580c;
+  padding: 10px 24px; font-size: 13.5px; font-weight: 700; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
 }
-.trial-banner.expired { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.trial-banner.expired { background: #fef2f2; border-color: #fecaca; color: var(--red); }
+
+/* Inverted-contrast button for CTAs sitting on a colored banner — white so
+   it reads clearly against amber/red instead of fighting them with the
+   teal-blue brand gradient. */
+.btn-on-banner {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; color: inherit; border: none; border-radius: 999px;
+  padding: 6px 14px; font-weight: 800; font-size: 12.5px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08); text-decoration: none;
+}
+.btn-on-banner:hover { background: #fff7ed; }
+.trial-banner.expired .btn-on-banner:hover { background: #fef2f2; }
 
 .dash-body { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
 .dash-heading { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
@@ -266,10 +295,18 @@ h1, h2, h3, p { margin: 0; }
 .app-tile.locked .app-tile-icon { background: #cbd5e1; }
 .app-tile-name { font-weight: 700; font-size: 14.5px; }
 .app-tile-status { font-size: 12px; color: var(--muted); }
-.app-tile-status.live { color: var(--green); font-weight: 700; }
+/* The whole tile is already the click target (an <a> or <button>), so this
+   can't be a nested interactive element — styled as a button-look chip
+   instead, purely visual, to signal "this card opens something". */
+.app-tile-status.live {
+  color: var(--green); font-weight: 700; font-size: 11.5px;
+  display: inline-flex; align-self: flex-start;
+  background: #f0fdf4; padding: 4px 10px; border-radius: 999px;
+}
+.app-tile:hover .app-tile-status.live { background: #dcfce7; }
 
 .status-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-.status-pill.trial { background: #fff7ed; color: #9a3412; }
+.status-pill.trial { background: #fff7ed; color: #ea580c; }
 .status-pill.active { background: #f0fdf4; color: #15803d; }
 .status-pill.expired { background: #fef2f2; color: #991b1b; }
 

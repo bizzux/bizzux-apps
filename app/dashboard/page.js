@@ -190,7 +190,7 @@ export default function DashboardPage() {
           {isAccountAdmin && (
             <Link href="/team" className="signout-link">👥 Team</Link>
           )}
-          <span style={{ fontSize: 13.5, color: "rgba(255,255,255,0.75)" }}>{user.email}</span>
+          <Link href="/profile" className="signout-link">👤 Profile</Link>
           <button className="signout-link" onClick={() => signOut(auth)}>Sign out</button>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
           <span className={"status-pill " + status}>{status === "trial" ? "Trial" : status === "active" ? "Active" : "Expired"}</span>
           {"  "}
           {customer.planName ? <>· Plan: {customer.planName}</> : (
-            <>· <Link href="/pricing" style={{ color: "var(--blue)", fontWeight: 700 }}>Choose a plan</Link></>
+            <Link href="/pricing" className="btn-primary-sm" style={{ marginLeft: 8 }}>Choose a plan</Link>
           )}
         </p>
 
